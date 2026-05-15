@@ -136,6 +136,42 @@ public class UserRepositoryStub implements UserRepository {
     }
 
     @Override
+    public List<User> findByProfileInterestsContainingIgnoreCase(String interest) {
+        List<User> result = new ArrayList<>();
+
+        for (User user : users) {
+            if (user.getProfile() != null && user.getProfile().getInterests().toLowerCase().contains(interest.toLowerCase())) {
+                result.add(user);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<User> findByProfileInterestsContainingIgnoreCaseAndAgeGreaterThanOrderByProfileLocationAsc(String interest, int age) {
+        List<User> result = new ArrayList<>();
+
+        for (User user : users) {
+            if (user.getProfile() != null && user.getProfile().getInterests().toLowerCase().contains(interest.toLowerCase()) && user.getAge() > age) {
+                result.add(user);
+            }
+        }
+
+        for (int i = 0; i < result.size(); i++) {
+            for (int j = i + 1; j < result.size(); j++) {
+                if (result.get(i).getProfile().getLocation().compareTo(result.get(j).getProfile().getLocation()) > 0) {
+                    User temporaryUser = result.get(i);
+                    result.set(i, result.get(j));
+                    result.set(j, temporaryUser);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public <S extends User> S save(S entity) {
         Optional<User> existingUser = findByEmail(entity.getEmail());
 

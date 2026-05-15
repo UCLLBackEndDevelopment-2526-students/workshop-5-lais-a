@@ -1,6 +1,7 @@
 package be.ucll.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -32,11 +33,21 @@ public class User {
     @Length(min = 8, message = "Password must be at least 8 characters long")
     private String password;
 
+    @Valid
+    @OneToOne
+    @JoinColumn(name = "profile_id", unique = true)
+    private Profile profile;
+
     public User(String name, int age, String email, String password) {
         setName(name);
         setAge(age);
         setEmail(email);
         setPassword(password);
+    }
+
+    public User(String name, int age, String email, String password, Profile profile) {
+        this(name, age, email, password);
+        setProfile(profile);
     }
 
     protected User() {
@@ -77,6 +88,18 @@ public class User {
         this.password = password;
     }
 
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(Profile profile) {
+        if (profile != null && getAge() < 18) {
+            throw new RuntimeException("User must be at least 18 years old to have a profile.");
+        }
+
+        this.profile = profile;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -84,6 +107,7 @@ public class User {
                 ", age=" + age +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
+                ", profile=" + profile +
                 '}';
     }
 
@@ -91,11 +115,11 @@ public class User {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return age == user.age && Objects.equals(name, user.name) && Objects.equals(email, user.email) && Objects.equals(password, user.password);
+        return age == user.age && Objects.equals(name, user.name) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(profile, user.profile);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, age, email, password);
+        return Objects.hash(name, age, email, password, profile);
     }
 }

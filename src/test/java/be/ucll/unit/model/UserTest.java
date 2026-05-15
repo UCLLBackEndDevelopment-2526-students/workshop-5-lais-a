@@ -1,5 +1,6 @@
 package be.ucll.unit.model;
 
+import be.ucll.model.Profile;
 import be.ucll.model.User;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -38,6 +39,24 @@ public class UserTest {
         assertEquals(56, user.getAge());
         assertEquals("john.doe@ucll.be", user.getEmail());
         assertEquals("john1234", user.getPassword());
+    }
+
+    @Test
+    public void givenValidValuesWithProfile_whenCreatingUser_thenUserIsCreatedWithProfile() {
+        Profile profile = new Profile("Teacher at UCLL", "Leuven", "Science, reading, cooking, movies");
+        User user = new User("John Doe", 56, "john.doe@ucll.be", "john1234", profile);
+
+        assertEquals(profile, user.getProfile());
+    }
+
+    @Test
+    public void givenMinorUserWithProfile_whenCreatingUser_thenRuntimeExceptionIsThrown() {
+        Profile profile = new Profile("Teacher at UCLL", "Leuven", "Science, reading, cooking, movies");
+
+        Exception ex = Assertions.assertThrows(RuntimeException.class,
+                () -> new User("John Doe", 17, "john.doe@ucll.be", "john1234", profile));
+
+        Assertions.assertEquals("User must be at least 18 years old to have a profile.", ex.getMessage());
     }
 
     @Test

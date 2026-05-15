@@ -45,12 +45,85 @@ public class UserTest {
                 .expectBody()
                 .json("""
                   [
-                    {"name":"John Doe","age":25,"email":"john.doe@ucll.be","password":"john1234"},
-                    {"name":"Jane Toe","age":30,"email":"jane.toe@ucll.be","password":"jane1234"},
+                    {"name":"John Doe","age":25,"email":"john.doe@ucll.be","password":"john1234","profile":{"bio":"Student","location":"Antwerp","interests":"Amazing science"}},
+                    {"name":"Jane Toe","age":30,"email":"jane.toe@ucll.be","password":"jane1234","profile":{"bio":"Architect","location":"Leuven","interests":"Sleeping"}},
+                    {"name":"Birgit Doe","age":18,"email":"birgit.doe@ucll.be","password":"birgit1234","profile":{"bio":"Java Programmer","location":"Hasselt","interests":"Walking in the forest, Science"}},
                     {"name":"Jack Doe","age":5,"email":"jack.doe@ucll.be","password":"jack1234"},
-                    {"name":"Sarah Doe","age":4,"email":"sarah.doe@ucll.be","password":"sarah1234"},
-                    {"name":"Birgit Doe","age":18,"email":"birgit.doe@ucll.be","password":"birgit1234"}
+                    {"name":"Sarah Doe","age":4,"email":"sarah.doe@ucll.be","password":"sarah1234"}
                   ]
+                  """);
+    }
+
+    @Test
+    public void givenUsersWithProfiles_whenGettingUsersByInterest_thenUsersWithInterestAreReturned() {
+        webTestClient
+                .get()
+                .uri("/users/interest/Sleeping")
+                .exchange().expectStatus().isOk()
+                .expectBody()
+                .json("""
+                  [
+                    {
+                      "name":"Jane Toe",
+                      "age":30,
+                      "email":"jane.toe@ucll.be",
+                      "password":"jane1234",
+                      "profile":{
+                        "bio":"Architect",
+                        "location":"Leuven",
+                        "interests":"Sleeping"
+                      }
+                    }
+                  ]
+                  """);
+    }
+
+    @Test
+    public void givenUsersWithProfiles_whenGettingUsersByInterestAndAge_thenUsersAreReturnedSortedByLocation() {
+        webTestClient
+                .get()
+                .uri("/users/interest/Science/17")
+                .exchange().expectStatus().isOk()
+                .expectBody()
+                .json("""
+                  [
+                    {
+                      "name":"John Doe",
+                      "age":25,
+                      "email":"john.doe@ucll.be",
+                      "password":"john1234",
+                      "profile":{
+                        "bio":"Student",
+                        "location":"Antwerp",
+                        "interests":"Amazing science"
+                      }
+                    },
+                    {
+                      "name":"Birgit Doe",
+                      "age":18,
+                      "email":"birgit.doe@ucll.be",
+                      "password":"birgit1234",
+                      "profile":{
+                        "bio":"Java Programmer",
+                        "location":"Hasselt",
+                        "interests":"Walking in the forest, Science"
+                      }
+                    }
+                  ]
+                  """);
+    }
+
+    @Test
+    public void givenInvalidAge_whenGettingUsersByInterestAndAge_thenErrorIsReturned() {
+        webTestClient
+                .get()
+                .uri("/users/interest/Science/151")
+                .exchange().expectStatus().isBadRequest()
+                .expectBody()
+                .json("""
+                  {
+                    "error":"Invalid age. Age must be between 0 and 150."
+                  }
                   """);
     }
 
@@ -132,6 +205,42 @@ public class UserTest {
     }
 
     @Test
+    public void givenValidUserInformationWithProfile_whenCreatingAUser_thenAUserWithProfileIsCreated() {
+        webTestClient
+                .post()
+                .uri("/users")
+                .header("Content-Type", "application/json")
+                .bodyValue("""
+                        {
+                          "name": "Simon",
+                          "age": "24",
+                          "email": "simon@synka.com",
+                          "password": "mtholly1234",
+                          "profile": {
+                            "bio": "Teacher at UCLL",
+                            "location": "Leuven",
+                            "interests": "Science, reading, cooking, movies"
+                          }
+                        }
+                        """)
+                .exchange().expectStatus().is2xxSuccessful()
+                .expectBody()
+                .json("""
+                    {
+                      "name":"Simon",
+                      "age":24,
+                      "email":"simon@synka.com",
+                      "password":"mtholly1234",
+                      "profile":{
+                        "bio":"Teacher at UCLL",
+                        "location":"Leuven",
+                        "interests":"Science, reading, cooking, movies"
+                      }
+                    }
+                  """);
+    }
+
+    @Test
     public void givenExistingUser_whenUpdatingUserWithNewInformation_thenInformationIsUpdated() {
         webTestClient
                 .put()
@@ -148,7 +257,17 @@ public class UserTest {
                 .exchange().expectStatus().is2xxSuccessful()
                 .expectBody()
                 .json("""
-                    {"name":"Timmy Doe","age":58,"email":"john.doe@ucll.be","password":"john1235"}
+                    {
+                      "name":"Timmy Doe",
+                      "age":58,
+                      "email":"john.doe@ucll.be",
+                      "password":"john1235",
+                      "profile":{
+                        "bio":"Student",
+                        "location":"Antwerp",
+                        "interests":"Amazing science"
+                      }
+                    }
                   """);
 
         User user = userRepository.findByEmail("john.doe@ucll.be").get();

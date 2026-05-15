@@ -7,6 +7,7 @@ import be.ucll.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +42,16 @@ public class UserRestController {
     @GetMapping("age/{min}/{max}")
     public List<User> getUsersBetweenAge(@PathVariable int min, @PathVariable int max) {
         return userService.getUsersBetweenAge(min, max);
+    }
+
+    @GetMapping("/interest/{interest}")
+    public List<User> getUsersByInterest(@PathVariable String interest) {
+        return userService.getUsersByInterest(interest);
+    }
+
+    @GetMapping("/interest/{interest}/{age}")
+    public List<User> getUsersByInterestAndOlderThan(@PathVariable String interest, @PathVariable int age) {
+        return userService.getUsersByInterestAndOlderThan(interest, age);
     }
 
     @GetMapping("/{email}/loans")
@@ -91,11 +102,22 @@ public class UserRestController {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({HttpMessageNotReadableException.class})
+    public Map<String, String> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", ex.getMostSpecificCause().getMessage());
+        return errors;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getFieldErrors()) {
             String fieldName = error.getField();
+            if (fieldName.contains(".")) {
+                fieldName = fieldName.substring(fieldName.lastIndexOf(".") + 1);
+            }
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         }

@@ -1,8 +1,10 @@
 package be.ucll.unit.service;
 
+import be.ucll.model.Profile;
 import be.ucll.model.User;
 import be.ucll.repository.LoanRepository;
 import be.ucll.service.UserService;
+import be.ucll.unit.repository.ProfileRepositoryStub;
 import be.ucll.unit.repository.UserRepositoryStub;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +22,7 @@ public class UserServiceTest {
     @BeforeEach
     public void setUp() {
         userRepository = new UserRepositoryStub();
-        userService = new UserService(userRepository, new LoanRepository());
+        userService = new UserService(userRepository, new LoanRepository(), new ProfileRepositoryStub());
     }
 
     @Test
@@ -192,6 +194,22 @@ public class UserServiceTest {
         // then
         assertEquals(newUser.getEmail(), result.getEmail());
         assertEquals(newUser.getName(), result.getName());
+        assertTrue(userService.getAllUsers().contains(newUser));
+    }
+
+    @Test
+    public void givenNewUserWithProfile_whenAddUser_thenUserWithProfileIsAdded() {
+        // given
+        Profile profile = new Profile("Teacher at UCLL", "Leuven", "Science, reading, cooking, movies");
+        User newUser = new User("New User", 28, "new.user@ucll.be", "newpass123", profile);
+
+        // when
+        User result = userService.addUser(newUser);
+
+        // then
+        assertEquals(newUser.getEmail(), result.getEmail());
+        assertEquals(newUser.getName(), result.getName());
+        assertEquals(profile, result.getProfile());
         assertTrue(userService.getAllUsers().contains(newUser));
     }
 

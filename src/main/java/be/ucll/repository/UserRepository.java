@@ -4,8 +4,6 @@ import be.ucll.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,5 +23,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByOrderByAgeDesc();
 
     List<User> findByNameContainingAndAgeGreaterThan(String chars, int age);
+
+    List<User> findByProfileInterestsContainingIgnoreCase(String interest);
+
+    List<User> findByProfileInterestsContainingIgnoreCaseAndAgeGreaterThanOrderByProfileLocationAsc(String interest, int age);
 
 }
